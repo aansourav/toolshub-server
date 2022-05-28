@@ -10,8 +10,8 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const url = `mongodb+srv://${process.env.DB_USER}:${process.env.PASSWORD}@vintagewheels.y6twe.mongodb.net/?retryWrites=true&w=majority`;
-const client = new MongoClient(url, {
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.erqd8.mongodb.net/?retryWrites=true&w=majority`;
+const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
@@ -42,12 +42,12 @@ const verifyRequest = (req, res, next) => {
 async function run() {
   try {
     await client.connect();
-    const database = client.db("vintage-wheels");
-    const toolsdata = database.collection("toolsData");
+    const database = client.db("tooldb");
+    const toolsdata = database.collection("toolsdata");
     const users = database.collection("users");
     const orders = database.collection("orders");
     const reviews = database.collection("reviews");
-    console.log("Db connected");
+    console.log("DB Connected");
 
     // auth
     app.put("/login", async (req, res) => {
@@ -68,7 +68,7 @@ async function run() {
       const { email } = req.params;
       const query = { email: email };
       const result = await users.findOne(query);
-      const isAdmin = result.role === "admin";
+      const isAdmin = result?.role === "admin";
       res.send({ isAdmin });
     });
 
@@ -114,6 +114,10 @@ async function run() {
 
     app.get("/readorders", async (req, res) => {
       const result = await orders.find({});
+      res.send(await result.toArray());
+    });
+    app.get("/readreviews", async (req, res) => {
+      const result = await reviews.find({});
       res.send(await result.toArray());
     });
 
